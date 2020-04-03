@@ -17,7 +17,8 @@ type Service struct {
 	Shopify *client.Shopify
 }
 
-type customerPayLoad struct {
+// Payload encapsulates our customer and associated nested attributes
+type Payload struct {
 	Customer *Customer `json:"customer"`
 }
 
@@ -44,8 +45,8 @@ type Address struct {
 }
 
 // Add makes a POST request to the customers.json url to create a customer
-func (s *Service) Add(Customer *Customer) map[string]interface{} {
-	payload := &customerPayLoad{Customer}
+func (s *Service) Add(Customer *Customer) (map[string]interface{}, error) {
+	payload := &Payload{Customer}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatalln(err)
@@ -54,6 +55,6 @@ func (s *Service) Add(Customer *Customer) map[string]interface{} {
 }
 
 // Get makes a GET request to the customers.json url to retrieve a list of customers
-func (s *Service) Get() map[string]interface{} {
+func (s *Service) Get() (map[string]interface{}, error) {
 	return s.Shopify.Client.Get("/customers.json")
 }

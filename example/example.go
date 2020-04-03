@@ -39,10 +39,10 @@ func main() {
 			},
 		},
 	}
-	result := s.CustomerSvc.Add(customer)
+	result, _ := s.CustomerSvc.Add(customer)
 	fmt.Println(result)
 
 	// get list of customers
-	customers := s.CustomerSvc.Get()
+	customers, _ := s.CustomerSvc.Get()
 	fmt.Println(customers)
 }

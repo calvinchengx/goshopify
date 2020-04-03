@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/calvinchengx/goshopify/client"
@@ -34,16 +36,20 @@ func TestShopifyClientPost(t *testing.T) {
 	s := client.New("key", "secret", "test")
 
 	// test data
-	c := &customer.Customer{
-		Email:     "testemail@example.com",
-		FirstName: "John",
-		LastName:  "Freud",
+	wd, err := os.Getwd()
+	filePath := path.Join(wd, "..", "customer", "testdata", "addcustomer.json")
+	b, err := ioutil.ReadFile(filePath)
+	var c customer.Customer
+	err = json.Unmarshal([]byte(b), &c)
+	if err != nil {
+		log.Fatal(err)
 	}
-	payload := &customer.Payload{Customer: c}
+	payload := &customer.Payload{Customer: &c}
 
 	// test data
-	jsonData := `{"id":"122345","first_name":"John","last_name":"Freud","email":"testemail@example.com"}`
-	r := ioutil.NopCloser(bytes.NewReader([]byte(jsonData)))
+	filePath = path.Join(wd, "..", "customer", "testdata", "addcustomer_res.json")
+	b, err = ioutil.ReadFile(filePath)
+	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
 	mockHTTPClient := &mock.HTTPClient{}
 	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
@@ -52,14 +58,15 @@ func TestShopifyClientPost(t *testing.T) {
 	}
 	s.Client.HTTPClient = mockHTTPClient
 
-	b, err := json.Marshal(payload)
+	b, err = json.Marshal(payload)
 	if err != nil {
 		log.Fatal(err)
 	}
 	result, err := s.Client.Post("/customers.json", b)
 
 	// assertion
-	assert.Equal("John", result["first_name"])
+	customer := result["customer"].(map[string]interface{})
+	assert.Equal("Steve", customer["first_name"])
 	assert.Nil(err)
 }
 

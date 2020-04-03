@@ -44,11 +44,16 @@ type Address struct {
 }
 
 // Add makes a POST request to the customers.json url to create a customer
-func (s *Service) Add(Customer *Customer) {
+func (s *Service) Add(Customer *Customer) map[string]interface{} {
 	payload := &customerPayLoad{Customer}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	s.Shopify.Client.Post("/customers.json", b)
+	return s.Shopify.Client.Post("/customers.json", b)
+}
+
+// Get makes a GET request to the customers.json url to retrieve a list of customers
+func (s *Service) Get() map[string]interface{} {
+	return s.Shopify.Client.Get("/customers.json")
 }

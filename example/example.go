@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -38,5 +39,10 @@ func main() {
 			},
 		},
 	}
-	s.CustomerSvc.Add(customer)
+	result := s.CustomerSvc.Add(customer)
+	fmt.Println(result)
+
+	// get list of customers
+	customers := s.CustomerSvc.Get()
+	fmt.Println(customers)
 }

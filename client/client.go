@@ -36,10 +36,12 @@ type Client struct {
 // e.g. resource = "/customers.json"
 func (c *Client) Post(resource string, b []byte) map[string]interface{} {
 	url := c.BaseURL + resource
-	httpClient := &http.Client{}
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
 	req.SetBasicAuth(c.APIKey, c.APISecret)
 	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
@@ -47,17 +49,18 @@ func (c *Client) Post(resource string, b []byte) map[string]interface{} {
 
 	var result map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&result)
-	fmt.Println(result)
 	return result
 }
 
 // Get executes a HTTP GET request with a json []byte payload to target resource and returns a response
 func (c *Client) Get(resource string) map[string]interface{} {
 	url := c.BaseURL + resource
-	httpClient := &http.Client{}
+
 	req, err := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth(c.APIKey, c.APISecret)
 	req.Header.Set("Content-Type", "application/json")
+
+	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
@@ -65,6 +68,5 @@ func (c *Client) Get(resource string) map[string]interface{} {
 
 	var result map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&result)
-	fmt.Println(result)
 	return result
 }

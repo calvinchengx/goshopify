@@ -17,5 +17,5 @@ func TestShopifyNewClient(t *testing.T) {
 
 	expected := fmt.Sprintf(`https://%s.myshopify.com/admin/api/%s`, "test", "2020-04")
 
-	assert.Equal(expected, s.URL())
+	assert.Equal(expected, s.Client.BaseURL)
 }

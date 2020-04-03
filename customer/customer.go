@@ -1,11 +1,8 @@
 package customer
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/calvinchengx/goshopify/client"
 )
@@ -18,6 +15,10 @@ func New(Shopify *client.Shopify) *Service {
 // Service is the implementation to access our service
 type Service struct {
 	Shopify *client.Shopify
+}
+
+type customerPayLoad struct {
+	Customer *Customer `json:"customer"`
 }
 
 // Customer models a shopify customer
@@ -43,29 +44,11 @@ type Address struct {
 }
 
 // Add makes a POST request to the customers.json url to create a customer
-func (s *Service) Add(customer *Customer) {
-	url := s.Shopify.URL() + "/customers.json"
-
-	fmt.Println(customer)
-	payload := make(map[string]*Customer)
-	payload["customer"] = customer
+func (s *Service) Add(Customer *Customer) {
+	payload := &customerPayLoad{Customer}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
-	req.SetBasicAuth(s.Shopify.APIKey, s.Shopify.APISecret)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// bodyText, err := ioutil.ReadAll(resp.Body)
-	// str := string(bodyText)
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	fmt.Println(&result)
+	s.Shopify.Client.Post("/customers.json", b)
 }

@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "base": [
+      "Customer must have a name, phone number or email address"
+    ]
+  }
+}

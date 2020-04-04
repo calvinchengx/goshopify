@@ -3,6 +3,7 @@ package client_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -53,7 +54,8 @@ func TestShopifyClientPost(t *testing.T) {
 	mockHTTPClient := &mock.HTTPClient{}
 	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
-			Body: r,
+			StatusCode: 201,
+			Body:       r,
 		}, nil
 	}
 	s.Client.HTTPClient = mockHTTPClient
@@ -65,9 +67,65 @@ func TestShopifyClientPost(t *testing.T) {
 	result, err := s.Client.Post("/customers.json", b)
 
 	// assertion
-	customer := result["customer"].(map[string]interface{})
-	assert.Equal("Steve", customer["first_name"])
+	customerResult := result["customer"].(map[string]interface{})
+	assert.Equal("Steve", customerResult["first_name"])
 	assert.Nil(err)
+}
+
+func TestShopifyClientPostInvalid(t *testing.T) {
+	assert := assert.New(t)
+
+	s := client.New("key", "secret", "test")
+
+	// test data
+	wd, err := os.Getwd()
+	filePath := path.Join(wd, "..", "customer", "testdata", "addcustomer_invalid.json")
+	b, err := ioutil.ReadFile(filePath)
+	var c customer.Customer
+	err = json.Unmarshal([]byte(b), &c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	payload := &customer.Payload{Customer: &c}
+
+	filePath = path.Join(wd, "..", "customer", "testdata", "addcustomer_res_failed.json")
+	b, err = ioutil.ReadFile(filePath)
+	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
+	mockHTTPClient := &mock.HTTPClient{}
+	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: 201,
+			Body:       r,
+		}, nil
+	}
+	s.Client.HTTPClient = mockHTTPClient
+
+	b, err = json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+	result, err := s.Client.Post("/customers.json", b)
+
+	errors := result["errors"].(map[string]interface{})
+	base := errors["base"].([]interface{})
+	assert.Equal("Customer must have a name, phone number or email address", base[0])
+}
+
+func TestShopifyClientPostFailed(t *testing.T) {
+	assert := assert.New(t)
+	s := client.New("key", "secret", "test")
+	mockHTTPClient := &mock.HTTPClient{}
+	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
+		return nil, errors.New("Connection failed")
+	}
+	s.Client.HTTPClient = mockHTTPClient
+	result, err := s.Client.Post("/customers.json", nil)
+	assert.Nil(result)
+	assert.Equal("Connection failed", err.Error())
+
+	result, err = s.Client.Get("/customers.json")
+	assert.Nil(result)
+	assert.Equal("Connection failed", err.Error())
 }
 
 func TestShopifyClientGet(t *testing.T) {

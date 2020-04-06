@@ -128,6 +128,46 @@ func TestShopifyClientPostFailed(t *testing.T) {
 	assert.Equal("Connection failed", err.Error())
 }
 
+func TestShopifyClientPostToVault(t *testing.T) {
+	assert := assert.New(t)
+
+	s := client.New("key", "secret", "test")
+
+	// test data
+	wd, err := os.Getwd()
+	filePath := path.Join(wd, "..", "saleschannel", "payment", "testdata", "req_creditcard.json")
+	b, err := ioutil.ReadFile(filePath)
+	var c customer.Customer
+	err = json.Unmarshal([]byte(b), &c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	payload := &customer.Payload{Customer: &c}
+
+	// test data
+	filePath = path.Join(wd, "..", "saleschannel", "payment", "testdata", "res_token.json")
+	b, err = ioutil.ReadFile(filePath)
+	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
+	mockHTTPClient := &mock.HTTPClient{}
+	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       r,
+		}, nil
+	}
+	s.Client.HTTPClient = mockHTTPClient
+
+	b, err = json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+	result, err := s.Client.PostToVault(b)
+
+	// assertion
+	assert.Equal("83hru3obno3hu434b3u", result["id"])
+	assert.Nil(err)
+}
+
 func TestShopifyClientGet(t *testing.T) {
 	assert := assert.New(t)
 

@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+const vaultURL = "https://elb.deposit.shopifycs.com/sessions"
+
 // Shopify models the shopify client parameters
 // https://{apiKey}:{apiSecret}@{domain}.myshopify.com/admin/api/{api-version}/{resource}.json
 type Shopify struct {
@@ -22,7 +24,8 @@ func New(APIKey, APISecret, domain string) *Shopify {
 	apiVersion := "2020-04"
 	BaseURL := fmt.Sprintf(`https://%s.myshopify.com/admin/api/%s`, domain, apiVersion)
 	HTTPClient := &http.Client{}
-	Client := &Client{APIKey, APISecret, BaseURL, HTTPClient}
+	VaultURL := vaultURL
+	Client := &Client{APIKey, APISecret, BaseURL, VaultURL, HTTPClient}
 	return &Shopify{domain, apiVersion, Client}
 }
 
@@ -36,7 +39,26 @@ type Client struct {
 	APIKey     string
 	APISecret  string
 	BaseURL    string
+	VaultURL   string
 	HTTPClient HTTPClient
+}
+
+// PostToVault posts to credit card vault
+func (c *Client) PostToVault(b []byte) (map[string]interface{}, error) {
+	url := c.VaultURL
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
+	req.SetBasicAuth(c.APIKey, c.APISecret)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+	return result, nil
 }
 
 // Post executes a HTTP POST request with a json []byte payload to target resource and returns a response

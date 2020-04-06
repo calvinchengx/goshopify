@@ -1,0 +1,33 @@
+{
+  "errors": {
+    "line_items": {
+      "1": {
+        "variant_id": [
+          {
+            "code": "invalid",
+            "message": "is invalid",
+            "options": {}
+          }
+        ]
+      },
+      "2": {
+        "variant_id": [
+          {
+            "code": "invalid",
+            "message": "is invalid",
+            "options": {}
+          }
+        ]
+      },
+      "4": {
+        "variant_id": [
+          {
+            "code": "invalid",
+            "message": "is invalid",
+            "options": {}
+          }
+        ]
+      }
+    }
+  }
+}

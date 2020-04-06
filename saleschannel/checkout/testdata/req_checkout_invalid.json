@@ -1,0 +1,26 @@
+{
+  "checkout": {
+    "line_items": [
+      {
+        "variant_id": 447654529,
+        "quantity": 1
+      },
+      {
+        "variant_id": 1,
+        "quantity": 1
+      },
+      {
+        "variant_id": 1,
+        "quantity": 1
+      },
+      {
+        "variant_id": 39072856,
+        "quantity": 1
+      },
+      {
+        "variant_id": 1,
+        "quantity": 1
+      }
+    ]
+  }
+}

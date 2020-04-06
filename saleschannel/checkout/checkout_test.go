@@ -49,7 +49,7 @@ func TestShopifyCheckoutCreateInvalid(t *testing.T) {
 	}
 	svc.Shopify.Client.HTTPClient = mockHTTPClient
 
-	result, err := svc.Add(&checkoutReq)
+	result, err := svc.Create(&checkoutReq)
 	assert.Equal(checkoutRes, result)
 	assert.Nil(err)
 }
@@ -87,7 +87,7 @@ func TestShopifyCheckoutCreateValid(t *testing.T) {
 	}
 	svc.Shopify.Client.HTTPClient = mockHTTPClient
 
-	result, err := svc.Add(&checkoutReq)
+	result, err := svc.Create(&checkoutReq)
 	assert.Equal(checkoutRes, result)
 	assert.Nil(err)
 }
@@ -125,7 +125,38 @@ func TestShopifyCheckoutCreateValidWithLineItems(t *testing.T) {
 	}
 	svc.Shopify.Client.HTTPClient = mockHTTPClient
 
-	result, err := svc.Add(&checkoutReq)
+	result, err := svc.Create(&checkoutReq)
 	assert.Equal(checkoutRes, result)
+	assert.Nil(err)
+}
+
+func TestShopifyCheckoutComplete(t *testing.T) {
+	assert := assert.New(t)
+
+	shopifyClient := client.New("key", "secret", "test")
+	svc := checkout.New(shopifyClient)
+
+	// test data
+	wd, _ := os.Getwd()
+
+	// test data
+	filePath := path.Join(wd, "testdata", "res_checkout_complete.json")
+	b, _ := ioutil.ReadFile(filePath)
+	var checkoutRes map[string]interface{}
+	_ = json.Unmarshal([]byte(b), &checkoutRes)
+
+	// prepare our mock
+	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
+	mockHTTPClient := &mock.HTTPClient{}
+	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: 202,
+			Body:       r,
+		}, nil
+	}
+	svc.Shopify.Client.HTTPClient = mockHTTPClient
+
+	result, err := svc.Complete("sometoken")
+	assert.NotNil(result)
 	assert.Nil(err)
 }

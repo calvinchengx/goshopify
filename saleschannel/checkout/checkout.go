@@ -2,6 +2,7 @@ package checkout
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/calvinchengx/goshopify/client"
 )
@@ -32,9 +33,15 @@ type LineItem struct {
 	Quantity  int64 `json:"quantity"`
 }
 
-// Add a checkout
-func (s *Service) Add(Checkout *Checkout) (map[string]interface{}, error) {
+// Create a checkout
+func (s *Service) Create(Checkout *Checkout) (map[string]interface{}, error) {
 	payload := &Payload{Checkout}
 	b, _ := json.Marshal(payload)
 	return s.Shopify.Client.Post("/checkouts.json", b)
+}
+
+// Complete a checkout using the token returned by payment.Store
+func (s *Service) Complete(token string) (map[string]interface{}, error) {
+	resource := fmt.Sprintf("/checkouts/%s/complete.json", token)
+	return s.Shopify.Client.Post(resource, []byte(`{}`))
 }

@@ -145,7 +145,7 @@ func TestShopifyClientPostToVault(t *testing.T) {
 	payload := &customer.Payload{Customer: &c}
 
 	// test data
-	filePath = path.Join(wd, "..", "saleschannel", "payment", "testdata", "res_token.json")
+	filePath = path.Join(wd, "..", "saleschannel", "payment", "testdata", "res_sessionid.json")
 	b, err = ioutil.ReadFile(filePath)
 	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
 	mockHTTPClient := &mock.HTTPClient{}

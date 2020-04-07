@@ -13,6 +13,7 @@ import (
 	"github.com/calvinchengx/goshopify/client"
 	"github.com/calvinchengx/goshopify/mock"
 	"github.com/calvinchengx/goshopify/saleschannel/checkout"
+	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,11 +103,8 @@ func TestShopifyCheckoutCreateValidWithLineItems(t *testing.T) {
 	wd, err := os.Getwd()
 	filePath := path.Join(wd, "testdata", "req_checkout_valid_withlineitems.json")
 	b, err := ioutil.ReadFile(filePath)
-	var checkoutReq checkout.Checkout
+	var checkoutReq map[string]interface{}
 	err = json.Unmarshal([]byte(b), &checkoutReq)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// test data
 	filePath = path.Join(wd, "testdata", "res_checkout_valid_created_withlineitems.json")
@@ -125,8 +123,14 @@ func TestShopifyCheckoutCreateValidWithLineItems(t *testing.T) {
 	}
 	svc.Shopify.Client.HTTPClient = mockHTTPClient
 
-	result, err := svc.Create(&checkoutReq)
+	var checkoutRequest *checkout.Checkout
+	mapstructure.Decode([]byte(b), checkoutRequest)
+	result, err := svc.Create(checkoutRequest)
 	assert.Equal(checkoutRes, result)
+	checkout := checkoutRes["checkout"].(map[string]interface{})
+	// this is the token used for
+	token := checkout["token"]
+	assert.Equal("660b5050744ca776869234e2c54e6133", token)
 	assert.Nil(err)
 }
 

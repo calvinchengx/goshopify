@@ -51,7 +51,7 @@ func (s *Service) Store(cc *CreditCard) (map[string]interface{}, error) {
 	return s.Shopify.Client.PostToVault(b)
 }
 
-// CreatePayment creates a payment on a checkout using the session ID returned by the card vault
+// CreatePayment creates a payment on a checkout using the token by the checkout creation
 func (s *Service) CreatePayment(token string, p *Payment) (map[string]interface{}, error) {
 	payload := &map[string]*Payment{
 		"payment": p,

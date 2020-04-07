@@ -31,7 +31,7 @@ func TestShopifyStoreCreditCard(t *testing.T) {
 	_ = json.Unmarshal([]byte(b), &creditCard)
 
 	// test data
-	filePath = path.Join(wd, "testdata", "res_token.json")
+	filePath = path.Join(wd, "testdata", "res_sessionid.json")
 	b, _ = ioutil.ReadFile(filePath)
 	var tokenRes map[string]interface{}
 	_ = json.Unmarshal([]byte(b), &tokenRes)

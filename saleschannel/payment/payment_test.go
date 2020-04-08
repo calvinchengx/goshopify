@@ -1,16 +1,11 @@
 package payment_test
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"testing"
 
 	"github.com/calvinchengx/goshopify/client"
-	"github.com/calvinchengx/goshopify/mock"
 	"github.com/calvinchengx/goshopify/saleschannel/payment"
 	"github.com/calvinchengx/goshopify/testhelper"
 	"github.com/mitchellh/mapstructure"
@@ -23,34 +18,24 @@ func TestShopifyStoreCreditCard(t *testing.T) {
 	shopifyClient := client.New("key", "secret", "test")
 	svc := payment.New(shopifyClient)
 
-	// test data
 	wd, _ := os.Getwd()
 
-	// test data
+	// test data input
 	filePath := path.Join(wd, "testdata", "req_creditcard.json")
-	b, _ := ioutil.ReadFile(filePath)
-	var creditCard payment.CreditCard
-	_ = json.Unmarshal([]byte(b), &creditCard)
+	b, input := testhelper.ParseFile(filePath)
 
-	// test data
+	// expected result
 	filePath = path.Join(wd, "testdata", "res_sessionid.json")
-	b, _ = ioutil.ReadFile(filePath)
-	var tokenRes map[string]interface{}
-	_ = json.Unmarshal([]byte(b), &tokenRes)
+	b, expected := testhelper.ParseFile(filePath)
 
-	// prepare our mock
-	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
-	mockHTTPClient := &mock.HTTPClient{}
-	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: 200,
-			Body:       r,
-		}, nil
-	}
-	svc.Shopify.Client.HTTPClient = mockHTTPClient
+	// prepare our mock http client
+	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 200)
 
-	result, err := svc.Store(&creditCard)
-	assert.Equal("83hru3obno3hu434b3u", result["id"])
+	var creditCard payment.CreditCard
+	mapstructure.Decode(input, &creditCard)
+	actual, err := svc.Store(&creditCard)
+
+	assert.Equal(expected["id"], actual["id"])
 	assert.Nil(err)
 }
 
@@ -83,6 +68,7 @@ func TestShopifyCreatePaymentValid(t *testing.T) {
 	actualPayment := actual["payment"].(map[string]interface{})
 	actualID := actualPayment["id"].(float64)
 
+	assert.Equal(expectedPayment, actualPayment)
 	assert.Equal(int(expectedID), int(actualID))
 	assert.Nil(err)
 }

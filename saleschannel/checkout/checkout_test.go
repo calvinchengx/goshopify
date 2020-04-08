@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -13,6 +12,7 @@ import (
 	"github.com/calvinchengx/goshopify/client"
 	"github.com/calvinchengx/goshopify/mock"
 	"github.com/calvinchengx/goshopify/saleschannel/checkout"
+	"github.com/calvinchengx/goshopify/testhelper"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,35 +23,23 @@ func TestShopifyCheckoutCreateInvalid(t *testing.T) {
 	shopifyClient := client.New("key", "secret", "test")
 	svc := checkout.New(shopifyClient)
 
-	// test data
 	wd, err := os.Getwd()
+
+	// test data input
 	filePath := path.Join(wd, "testdata", "req_checkout_invalid.json")
-	b, err := ioutil.ReadFile(filePath)
-	var checkoutReq checkout.Checkout
-	err = json.Unmarshal([]byte(b), &checkoutReq)
-	if err != nil {
-		log.Fatal(err)
-	}
+	b, input := testhelper.ParseFile(filePath)
 
 	// test data
 	filePath = path.Join(wd, "testdata", "res_checkout_invalid.json")
-	b, err = ioutil.ReadFile(filePath)
-	var checkoutRes map[string]interface{}
-	err = json.Unmarshal([]byte(b), &checkoutRes)
+	b, expected := testhelper.ParseFile(filePath)
 
 	// prepare our mock
-	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
-	mockHTTPClient := &mock.HTTPClient{}
-	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: 422,
-			Body:       r,
-		}, nil
-	}
-	svc.Shopify.Client.HTTPClient = mockHTTPClient
+	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 422)
 
-	result, err := svc.Create(&checkoutReq)
-	assert.Equal(checkoutRes, result)
+	var checkoutReq checkout.Checkout
+	mapstructure.Decode(input, &checkoutReq)
+	actual, err := svc.Create(&checkoutReq)
+	assert.Equal(expected, actual)
 	assert.Nil(err)
 }
 
@@ -61,35 +49,23 @@ func TestShopifyCheckoutCreateValid(t *testing.T) {
 	shopifyClient := client.New("key", "secret", "test")
 	svc := checkout.New(shopifyClient)
 
-	// test data
 	wd, err := os.Getwd()
+
+	// test data input
 	filePath := path.Join(wd, "testdata", "req_checkout_valid_nolineitems.json")
-	b, err := ioutil.ReadFile(filePath)
-	var checkoutReq checkout.Checkout
-	err = json.Unmarshal([]byte(b), &checkoutReq)
-	if err != nil {
-		log.Fatal(err)
-	}
+	b, input := testhelper.ParseFile(filePath)
 
 	// test data
 	filePath = path.Join(wd, "testdata", "res_checkout_valid_created.json")
-	b, err = ioutil.ReadFile(filePath)
-	var checkoutRes map[string]interface{}
-	err = json.Unmarshal([]byte(b), &checkoutRes)
+	b, expected := testhelper.ParseFile(filePath)
 
 	// prepare our mock
-	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
-	mockHTTPClient := &mock.HTTPClient{}
-	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: 201,
-			Body:       r,
-		}, nil
-	}
-	svc.Shopify.Client.HTTPClient = mockHTTPClient
+	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 201)
 
-	result, err := svc.Create(&checkoutReq)
-	assert.Equal(checkoutRes, result)
+	var checkoutReq checkout.Checkout
+	mapstructure.Decode(input, &checkoutReq)
+	actual, err := svc.Create(&checkoutReq)
+	assert.Equal(expected, actual)
 	assert.Nil(err)
 }
 
@@ -112,16 +88,8 @@ func TestShopifyCheckoutCreateValidWithLineItems(t *testing.T) {
 	var checkoutRes map[string]interface{}
 	err = json.Unmarshal([]byte(b), &checkoutRes)
 
-	// prepare our mock
-	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
-	mockHTTPClient := &mock.HTTPClient{}
-	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: 201,
-			Body:       r,
-		}, nil
-	}
-	svc.Shopify.Client.HTTPClient = mockHTTPClient
+	// prepare our mock http client
+	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 201)
 
 	var checkoutRequest *checkout.Checkout
 	mapstructure.Decode([]byte(b), checkoutRequest)

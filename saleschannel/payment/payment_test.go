@@ -12,6 +12,7 @@ import (
 	"github.com/calvinchengx/goshopify/client"
 	"github.com/calvinchengx/goshopify/mock"
 	"github.com/calvinchengx/goshopify/saleschannel/payment"
+	"github.com/calvinchengx/goshopify/testhelper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,28 +62,20 @@ func TestShopifyCreatePaymentValid(t *testing.T) {
 	// test data
 	wd, _ := os.Getwd()
 
-	// test data
+	// test data input
 	filePath := path.Join(wd, "testdata", "req_payment_valid.json")
 	b, _ := ioutil.ReadFile(filePath)
 	var p payment.Payment
 	_ = json.Unmarshal([]byte(b), &p)
 
-	// test data
+	// expected result
 	filePath = path.Join(wd, "testdata", "res_payment_valid.json")
 	b, _ = ioutil.ReadFile(filePath)
 	var paymentResult map[string]interface{}
 	_ = json.Unmarshal([]byte(b), &paymentResult)
 
-	// prepare our mock
-	r := ioutil.NopCloser(bytes.NewReader([]byte(b)))
-	mockHTTPClient := &mock.HTTPClient{}
-	mockHTTPClient.DoFn = func(*http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: 202,
-			Body:       r,
-		}, nil
-	}
-	svc.Shopify.Client.HTTPClient = mockHTTPClient
+	// prepare our mock http client
+	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 202)
 
 	result, err := svc.CreatePayment("somevalidtoken", &p)
 	assert.NotNil(result)

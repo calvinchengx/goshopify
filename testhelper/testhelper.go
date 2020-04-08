@@ -10,9 +10,9 @@ import (
 )
 
 // ParseFile parses the given json file and returns its bytes and map
-func ParseFile(filePath string) (b []byte, result *map[string]interface{}) {
+func ParseFile(filePath string) (b []byte, result map[string]interface{}) {
 	b, _ = ioutil.ReadFile(filePath)
-	_ = json.Unmarshal([]byte(b), result)
+	_ = json.Unmarshal([]byte(b), &result)
 	return b, result
 }
 

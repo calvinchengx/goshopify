@@ -13,6 +13,7 @@ import (
 	"github.com/calvinchengx/goshopify/mock"
 	"github.com/calvinchengx/goshopify/saleschannel/payment"
 	"github.com/calvinchengx/goshopify/testhelper"
+	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,25 +60,29 @@ func TestShopifyCreatePaymentValid(t *testing.T) {
 	shopifyClient := client.New("key", "secret", "test")
 	svc := payment.New(shopifyClient)
 
-	// test data
 	wd, _ := os.Getwd()
 
 	// test data input
 	filePath := path.Join(wd, "testdata", "req_payment_valid.json")
-	b, _ := ioutil.ReadFile(filePath)
-	var p payment.Payment
-	_ = json.Unmarshal([]byte(b), &p)
+	b, input := testhelper.ParseFile(filePath)
 
 	// expected result
 	filePath = path.Join(wd, "testdata", "res_payment_valid.json")
-	b, _ = ioutil.ReadFile(filePath)
-	var paymentResult map[string]interface{}
-	_ = json.Unmarshal([]byte(b), &paymentResult)
+	b, expected := testhelper.ParseFile(filePath)
+	expectedPayment := expected["payment"].(map[string]interface{})
+	expectedID := expectedPayment["id"].(float64)
 
 	// prepare our mock http client
 	svc.Shopify.Client.HTTPClient = testhelper.CreateMockHTTPClient(b, 202)
 
-	result, err := svc.CreatePayment("somevalidtoken", &p)
-	assert.NotNil(result)
+	// invoke our CreatePayment function
+	var p payment.Payment
+	mapstructure.Decode(input, &p)
+	actual, err := svc.CreatePayment("somevalidtoken", &p)
+
+	actualPayment := actual["payment"].(map[string]interface{})
+	actualID := actualPayment["id"].(float64)
+
+	assert.Equal(int(expectedID), int(actualID))
 	assert.Nil(err)
 }
